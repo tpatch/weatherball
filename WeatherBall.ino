@@ -85,8 +85,9 @@ void loop() {
 }
 
 void decodeJSON(String jsonString) {
-  char json[jsonString.length() + 1];
-  jsonString.toCharArray(json, jsonString.length() + 1);
+  char temp[jsonString.length() + 1];
+  jsonString.toCharArray(temp, jsonString.length() + 1);
+  char * json = temp;
   Serial.println(json);
   StaticJsonBuffer<500> jsonBuffer;
   JsonObject& root = jsonBuffer.parseObject(json);
