@@ -1,9 +1,14 @@
 #include <ESP8266WiFi.h>
 #include <ArduinoJson.h>
+#include <Adafruit_NeoPixel.h>
 
-int led = 3;
-int color = 0;
-int condition = 0;
+#define led 2
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(1, led, NEO_GRB + NEO_KHZ800);
+
+int r = 0;
+int g = 0;
+int b = 0;
+//int condition = 0;
 
 const char *ssid = "";
 const char *password = "";
@@ -13,8 +18,6 @@ const char* host = "api.openweathermap.org";
 void setup() {
   //Initialize serial
   Serial.begin(115200);
-
-  pinMode(led, OUTPUT);
   
   // attempt to connect to Wifi network:
   while (true) {
@@ -32,15 +35,14 @@ void setup() {
   // printCurrentNet();
   // printWifiData();
 
+  strip.begin();
+  strip.setPixelColor(0, strip.Color(255,255,0));
+  strip.show();
 }
 
 void loop() {
   // check the network connection once every 10 seconds:
   delay(10000);
-
-  // Testing LED w/ random output
-  color = random (1,1023);
-  analogWrite(led, color);
 
   Serial.print("Connecting to ");
   Serial.println(host);
@@ -62,94 +64,116 @@ void loop() {
 
   // Parse our weather data
   boolean openingBracket = false;
-  String jsonString = "";
+  char json[75] = "{";
+  int n = 1;
+
+  while (!client.find("\"coord\":{")){}
   
   while(client.available()){
     char c = client.read();
-    if (c == '{') {
-      openingBracket = true;
-    }
     if (openingBracket) {
-      if (c == '\n') {
-          Serial.println(jsonString);
-          decodeJSON(jsonString);
+      if (c == ']') {
           break;
       }
       
       // Read out JSON string
-      jsonString += c;
+      json[n] = c;
+      n++;
+    }
+    if (c == '{') {
+      openingBracket = true;
     }
   }
 
-  Serial.println("Closing connection.");
-}
-
-void decodeJSON(String jsonString) {
-  char temp[jsonString.length() + 1];
-  jsonString.toCharArray(temp, jsonString.length() + 1);
-  char * json = temp;
   Serial.println(json);
-  StaticJsonBuffer<500> jsonBuffer;
+  StaticJsonBuffer<150> jsonBuffer;
   JsonObject& root = jsonBuffer.parseObject(json);
   
   if (!root.success()) {
     Serial.println("parseObject() failed");
     return;
+  } else {
+    Serial.println("JSON Successfully parsed!");
   }
-  
-  condition = root["weather"][1];
-  Serial.println("Condition: " + condition);
-  changeWeather(condition);
+
+  const char * condition = root["id"];
+  Serial.println(condition);
+  //changeWeather(condition);
+
+  strip.setPixelColor(0, strip.Color(random(255),random(255),random(255)));
+  strip.show();
+
+  Serial.println("Closing connection.");
 }
 
 void changeWeather(int condition) {
   if ( condition > 199 && condition < 233 ) {
     //T-storm
-    color = 0;
+    r = 255;
+    g = 0;
+    b = 0;
 
   } else if ( condition > 299 && condition < 322 ) {
     //Drizzle
-    color = 0;
+    r = 0;
+    g = 0;
+    b = 200;
 
   } else if ( condition > 499 && condition < 532 ) {
     //Rain
-    color = 0;
+    r = 0;
+    g = 0;
+    b = 255;
 
   } else if ( condition > 599 && condition < 623 ) {
     //Snow
-    color = 0;
+    r = 250;
+    g = 250;
+    b = 250;
 
   } else if ( condition > 700 && condition < 782 ) {
     //Atmosphere
-    color = 0;
+    r = 0;
+    g = 0;
+    b = 0;
 
   } else if ( condition > 799 && condition < 805 ) {
     //Cloudy states
 
     if ( condition == 800 ) {
       //Clear
-      color = 0;
+      r = 255;
+      g = 255;
+      b = 0;
 
     } else if ( condition > 800 && condition < 804 ) {
       //Few/scattered/broken
-      color = 0;
+      r = 102;
+      g = 153;
+      b = 204;
 
     } else {
       //Overcast
-      color = 0;
+      r = 102;
+      g = 153;
+      b = 204;
 
     };
   } else if ( condition > 899 && condition < 907 ) {
     //Extreme
-    color = 0;
+    r = 0;
+    g = 0;
+    b = 0;
     
   } else if ( condition > 955 && condition < 960 ) {
     //Windy
-    color = 0;
-    
+    r = 0;
+    g = 0;
+    b = 0;
   };
 
-  analogWrite(led, color);
+  strip.setPixelColor(0, strip.Color(r, g, b));
+  strip.show();
 };
 
 void printWifiData() {
@@ -160,7 +184,6 @@ void printWifiData() {
   // print your MAC address:
   Serial.print("MAC address: ");
   Serial.println(WiFi.macAddress());
-
 }
 
 void printCurrentNet() {
