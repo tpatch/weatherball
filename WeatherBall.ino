@@ -12,8 +12,7 @@ int b = 0;
 
 const char *ssid = "";
 const char *password = "";
-const char *key = "";
-const char* host = "api.openweathermap.org";
+const char *host = "api.openweathermap.org";
 
 void setup() {
   //Initialize serial
@@ -96,17 +95,16 @@ void loop() {
     Serial.println("JSON Successfully parsed!");
   }
 
-  const char * condition = root["id"];
+  const char *cond = root["id"];
+  int condition = atoi(cond);
   Serial.println(condition);
-  //changeWeather(condition);
-
-  strip.setPixelColor(0, strip.Color(random(255),random(255),random(255)));
-  strip.show();
+  changeWeather(condition);
 
   Serial.println("Closing connection.");
 }
 
 void changeWeather(int condition) {
+  Serial.println(condition);
   if ( condition > 199 && condition < 233 ) {
     //T-storm
     r = 255;
@@ -170,8 +168,13 @@ void changeWeather(int condition) {
     r = 0;
     g = 0;
     b = 0;
+  } else {
+    r = 255;
+    g = 165;
+    b = 0;
   };
 
+  Serial.println(r);
   strip.setPixelColor(0, strip.Color(r, g, b));
   strip.show();
 };
