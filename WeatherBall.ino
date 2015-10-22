@@ -8,14 +8,12 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(1, led, NEO_GRB + NEO_KHZ800);
 int r = 0;
 int g = 0;
 int b = 0;
-//int condition = 0;
 
 const char *ssid = "";
 const char *password = "";
 const char *host = "api.openweathermap.org";
 
 void setup() {
-  //Initialize serial
   Serial.begin(115200);
   
   // attempt to connect to Wifi network:
@@ -35,7 +33,7 @@ void setup() {
   // printWifiData();
 
   strip.begin();
-  strip.setPixelColor(0, strip.Color(255,255,0));
+  strip.setPixelColor(0, strip.Color(255,165,0));
   strip.show();
 }
 
