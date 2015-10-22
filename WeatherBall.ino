@@ -8,6 +8,7 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(1, led, NEO_GRB + NEO_KHZ800);
 int r = 0;
 int g = 0;
 int b = 0;
+int status = 0;
 
 const char *ssid = "";
 const char *password = "";
@@ -38,8 +39,12 @@ void setup() {
 }
 
 void loop() {
-  // check the network connection once every 10 seconds:
   delay(10000);
+
+  // Show color cycle if there's no data yet
+  if ( !status ) {
+    rainbowCycle(20);
+  }
 
   Serial.print("Connecting to ");
   Serial.println(host);
@@ -52,6 +57,7 @@ void loop() {
   }
 
   // Set and get our weather data
+  // Forecast: /data/2.5/forecast?id=5231851&cnt=1&APPID=
   String url = "/data/2.5/weather?id=5231851&APPID=";
   client.print(String("GET ") + url + " HTTP/1.1\r\n" +
                "Host: " + host + "\r\n" + 
@@ -91,6 +97,7 @@ void loop() {
     return;
   } else {
     Serial.println("JSON Successfully parsed!");
+    status = 1;
   }
 
   const char *cond = root["id"];
@@ -175,7 +182,19 @@ void changeWeather(int condition) {
   Serial.println(r);
   strip.setPixelColor(0, strip.Color(r, g, b));
   strip.show();
-};
+}
+
+void rainbowCycle(uint8_t wait) {
+  uint16_t i, j;
+
+  for(j=0; j<256*5; j++) {
+    for(i=0; i< strip.numPixels(); i++) {
+      strip.setPixelColor(i, Wheel(((i * 256 / strip.numPixels()) + j) & 255));
+    }
+    strip.show();
+    delay(wait);
+  }
+}
 
 void printWifiData() {
   // print your ESP8266 IP address:
